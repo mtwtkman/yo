@@ -1,3 +1,4 @@
+extern crate base64;
 extern crate rand;
 extern crate actix_files;
 extern crate actix_web;
@@ -21,7 +22,13 @@ use validator::{Validate, ValidationError};
 mod webauthn;
 mod helper;
 
-use webauthn::WebAuthnCredentialCreationOpption;
+use webauthn::{
+    PublicKeyCredentialCreationOptions,
+    RelyingParty,
+    User,
+    CredParam,
+    Algorithm,
+};
 
 fn index() -> actix_web::Result<NamedFile> {
     let path = PathBuf::from("index.html");
@@ -45,10 +52,23 @@ fn validate_name(value: &str) -> Result<(), ValidationError>{
 
 fn begin_activate(register_form: web::Json<RegistrationForm>) -> HttpResponse {
     match register_form.validate() {
-        Ok(()) => HttpResponse::Ok().json(WebAuthnCredentialCreationOpption::new(
-            helper::generate_random(32), "yo".to_owned(), "yo".to_owned(), helper::generate_random(20), register_form.username.to_owned(),
-            register_form.display_name.to_owned(), "".to_owned(), None, None, None,
-        )),
+        Ok(()) => {
+            let rp = RelyingParty::new("yo", "yo", None);
+            let user = User::new(&register_form.username, &register_form.display_name, None);
+            let pub_key_cred_params = vec![Algorithm::ES256, Algorithm::PS256, Algorithm::RS256].into_iter().map(CredParam::new).collect();
+            let body = PublicKeyCredentialCreationOptions::new(
+                rp,
+                user,
+                32,
+                pub_key_cred_params,
+                None,
+                None,
+                None,
+                None,
+                None,
+            );
+            HttpResponse::Ok().json(body)
+        }
         Err(_) => HttpResponse::BadRequest().finish(),  // TODO: error handling
     }
 }

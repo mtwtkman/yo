@@ -7,14 +7,15 @@
     const app = Elm.Main.init({
       node: document.querySelector('#app'),
     });
-    app.ports.createCredential.subscribe(async (options) => {
-      options.challenge = Uint8Array.from(options.challenge);
-      options.extensions['webauthn.loc'] = options.extensions.webauthnLoc;
-      delete options.extensions.webauthnLoc;
-      console.log(options);
-      const result = await navigator.credentials.create({
-        publicKey: options
+    app.ports.createCredential.subscribe(async publicKey => {
+      publicKey.challenge = Uint8Array.from(publicKey.challenge);  // FIXME: do this in elm world.
+      publicKey.user.id = Uint8Array.from(publicKey.user.id);
+      publicKey.pubKeyCredParams.forEach(v => {
+        v.type = v.type_;
+        delete v.type_;
       });
+      console.log(publicKey);
+      const result = await navigator.credentials.create({ publicKey });
       console.log(result);
     });
   </script>

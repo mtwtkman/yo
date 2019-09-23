@@ -44,8 +44,8 @@ init =
 type Msg
     = UpdateUsername String
     | UpdateDisplayName String
-    | CreateWebAuthnCredentialCreationOpption
-    | GotCredentialCreationOption (Result Http.Error WebAuthnCredentialCreationOpption)
+    | CreateCredentialCreationOpption
+    | GotCredentialCreationOption (Result Http.Error CredentialCreationOpption)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -75,7 +75,7 @@ update msg model =
             , Cmd.none
             )
 
-        CreateWebAuthnCredentialCreationOpption ->
+        CreateCredentialCreationOpption ->
             ( model
             , registerUser
                 { username = Maybe.withDefault "" model.username
@@ -100,7 +100,6 @@ type alias EncodedUser =
     { id : List Int
     , name : String
     , displayName : String
-    , icon : String
     }
 
 
@@ -109,43 +108,36 @@ type alias PublicKeyCredentialCreationOption =
     , rp : RelyingParty
     , user : EncodedUser
     , pubKeyCredParams : PubKeyCredParams
-    , timeout : Int
-    , excludeCredentials : List String
-    , attestation : String
-    , extensions : Extensions
-    , authenticatorSelection : Maybe String
     }
 
 
-toEncodedCharList : String -> List Int
-toEncodedCharList s =
-    String.toList (Base64.encode s)
-        |> List.map Char.toCode
+toCharCodePoints : String -> List Int
+toCharCodePoints encoded =
+    case Base64.decode encoded of
+        Err _ ->
+            []
+
+        Ok decoded ->
+            List.map Char.toCode <| String.toList decoded
 
 
-transformCredentialCreationOption : WebAuthnCredentialCreationOpption -> PublicKeyCredentialCreationOption
-transformCredentialCreationOption webAuthnCredentialCreationOption =
+transformCredentialCreationOption : CredentialCreationOpption -> PublicKeyCredentialCreationOption
+transformCredentialCreationOption credentialCreationOption =
     let
         encodedUser =
             let
                 user =
-                    webAuthnCredentialCreationOption.user
+                    credentialCreationOption.user
             in
-            { id = toEncodedCharList webAuthnCredentialCreationOption.user.id
-            , name = webAuthnCredentialCreationOption.user.name
-            , displayName = webAuthnCredentialCreationOption.user.displayName
-            , icon = webAuthnCredentialCreationOption.user.icon
+            { id = toCharCodePoints credentialCreationOption.user.id
+            , name = credentialCreationOption.user.name
+            , displayName = credentialCreationOption.user.displayName
             }
     in
-    { challenge = toEncodedCharList webAuthnCredentialCreationOption.challenge
-    , rp = webAuthnCredentialCreationOption.rp
+    { challenge = toCharCodePoints credentialCreationOption.challenge
+    , rp = credentialCreationOption.rp
     , user = encodedUser
-    , pubKeyCredParams = webAuthnCredentialCreationOption.pubKeyCredParams
-    , timeout = webAuthnCredentialCreationOption.timeout
-    , excludeCredentials = webAuthnCredentialCreationOption.excludeCredentials
-    , attestation = webAuthnCredentialCreationOption.attestation
-    , extensions = webAuthnCredentialCreationOption.extensions
-    , authenticatorSelection = webAuthnCredentialCreationOption.authenticatorSelection
+    , pubKeyCredParams = credentialCreationOption.pubKeyCredParams
     }
 
 
@@ -182,7 +174,7 @@ view model =
             ]
         , div []
             [ button
-                [ onClick CreateWebAuthnCredentialCreationOpption
+                [ onClick CreateCredentialCreationOpption
                 , disabled submit_disabled
                 ]
                 [ text "register" ]
@@ -199,7 +191,7 @@ registerUser registration_form =
     Http.post
         { url = "/begin_activate"
         , body = Http.jsonBody <| registrationEncoder registration_form
-        , expect = Http.expectJson GotCredentialCreationOption webAuthnMakeCredentialOptionDecoder
+        , expect = Http.expectJson GotCredentialCreationOption makeCredentialOptionDecoder
         }
 
 
@@ -234,7 +226,6 @@ type alias User =
     { id : String
     , name : String
     , displayName : String
-    , icon : String
     }
 
 
@@ -244,7 +235,6 @@ userDecoder =
         |> required "id" string
         |> required "name" string
         |> required "displayName" string
-        |> required "icon" string
 
 
 type alias PubKeyCredParam =
@@ -269,42 +259,21 @@ pubKeyCredParamsDecoder =
     list pubKeyCredParamDecoder
 
 
-type alias Extensions =
-    { webauthnLoc : Bool
-    }
-
-
-extensionsDecoder : Decoder Extensions
-extensionsDecoder =
-    D.succeed Extensions
-        |> required "webauthn.loc" bool
-
-
-type alias WebAuthnCredentialCreationOpption =
+type alias CredentialCreationOpption =
     { challenge : String
     , rp : RelyingParty
     , user : User
     , pubKeyCredParams : PubKeyCredParams
-    , timeout : Int
-    , excludeCredentials : List String
-    , attestation : String
-    , extensions : Extensions
-    , authenticatorSelection : Maybe String
     }
 
 
-webAuthnMakeCredentialOptionDecoder : Decoder WebAuthnCredentialCreationOpption
-webAuthnMakeCredentialOptionDecoder =
-    D.succeed WebAuthnCredentialCreationOpption
+makeCredentialOptionDecoder : Decoder CredentialCreationOpption
+makeCredentialOptionDecoder =
+    D.succeed CredentialCreationOpption
         |> required "challenge" string
         |> required "rp" relyingPartyDecoder
         |> required "user" userDecoder
         |> required "pubKeyCredParams" pubKeyCredParamsDecoder
-        |> required "timeout" int
-        |> required "excludeCredentials" (list string)
-        |> required "attestation" string
-        |> required "extensions" extensionsDecoder
-        |> required "authenticatorSelection" (maybe string)
 
 
 

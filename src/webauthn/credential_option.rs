@@ -1,28 +1,14 @@
 use serde::{Serialize, Serializer};
-
-enum AttestationType {
-    Basic,
-    ECDAA,
-    AttCA,
-    Self_,
-    None,
-}
-
-enum AttestationFormat {
-    Packed,
-    TPM,
-    FIDOU2F,
-    None,
-}
+use crate::helper::generate_random;
 
 #[derive(Clone, Copy)]
-pub enum AttestationForm {
+pub enum Attestation {
     None,
     Indirect,
     Direct,
 }
 
-impl Serialize for AttestationForm {
+impl Serialize for Attestation {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
@@ -57,7 +43,7 @@ impl Serialize for UserVerification {
     }
 }
 
-enum Algorithm {
+pub enum Algorithm {
     ES256,
     PS256,
     RS256,
@@ -78,98 +64,227 @@ impl Serialize for Algorithm {
 }
 
 #[derive(Serialize)]
-struct RelyingParty {
+pub struct RelyingParty {
     name: String,
     id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    icon: Option<String>
+}
+
+impl RelyingParty {
+    pub fn new(name: &str, id: &str, icon: Option<&str>) -> Self {
+        RelyingParty {
+            name: name.to_owned(),
+            id: id.to_owned(),
+            icon: icon.map(|v| v.to_owned()),
+        }
+    }
 }
 
 #[derive(Serialize)]
-struct User {
+pub struct User {
     id: String,
     name: String,
     #[serde(rename(serialize = "displayName"))]
     display_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     icon: Option<String>,
 }
 
+impl User {
+    pub fn new(name: &str, display_name: &str, icon: Option<&str>) -> Self {
+        User {
+            id: generate_random(20),
+            name: name.to_owned(),
+            display_name: display_name.to_owned(),
+            icon: icon.map(|v| v.to_owned()),
+        }
+    }
+}
+
 #[derive(Serialize)]
-struct CredParam {
+pub struct CredParam {
     alg: Algorithm,
     #[serde(rename(serialize = "type"))]
     type_: String,
 }
 
-#[derive(Serialize)]
-struct Extension {
-    #[serde(rename(serialize = "webauthn.loc"))]
-    webauthn_loc: bool,
+impl CredParam {
+    pub fn new(alg: Algorithm) -> Self {
+        CredParam {
+            alg,
+            type_: "public-key".to_owned(),
+        }
+    }
 }
 
 #[derive(Serialize)]
-struct AuthenticatorSelection {
+pub struct BiometricPerfBounds {
+    far: f64,
+    frr: f64,
+}
+
+#[derive(Serialize)]
+pub struct Extension {
+    #[serde(rename(serialize = "authSel"))]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    auth_sel: Option<Vec<usize>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    exts: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    uvi: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    loc: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    uvm: Option<bool>,
+    #[serde(rename(serialize = "biometricPerfBounds"))]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    biometric_perf_bounds: Option<BiometricPerfBounds>,
+}
+
+impl Extension {
+    pub fn new(auth_sel: Option<Vec<usize>>, exts: Option<bool>, uvi: Option<bool>, loc: Option<bool>, uvm: Option<bool>, biometric_perf_bounds: Option<BiometricPerfBounds>) -> Self {
+        Extension {
+            auth_sel,
+            exts,
+            uvi,
+            loc,
+            uvm,
+            biometric_perf_bounds,
+        }
+    }
+}
+
+
+pub enum AuthenticatorAttachment {
+    Platform,
+    CrossPlatform,
+}
+
+impl Serialize for AuthenticatorAttachment {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer
+    {
+        let s = match self {
+            Self::Platform => "platform",
+            Self::CrossPlatform => "cross-platform",
+        };
+        serializer.serialize_str(s)
+    }
+}
+
+#[derive(Serialize)]
+pub struct AuthenticatorSelection {
     #[serde(rename(serialize = "userVerification"))]
-    user_verification: UserVerification,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    user_verification: Option<UserVerification>,
+    #[serde(rename(serialize = "authenticatorAttachment"))]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    authenticator_attachment: Option<AuthenticatorAttachment>,
+    #[serde(rename(serialize = "requireResidentKey"))]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    require_resident_key: Option<bool>
+}
+
+impl AuthenticatorSelection {
+    pub fn new(user_verification: Option<UserVerification>, authenticator_attachment: Option<AuthenticatorAttachment>, require_resident_key: Option<bool>) -> Self {
+        AuthenticatorSelection {
+            user_verification,
+            authenticator_attachment,
+            require_resident_key,
+        }
+    }
+}
+
+
+#[derive(Clone, Copy)]
+pub enum ExcludeCredentialTransport {
+    USB,
+    NFC,
+    BLE,
+    INTERNAL,
+}
+
+
+impl Serialize for ExcludeCredentialTransport {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer
+    {
+        let s = match self {
+            Self::USB => "usb",
+            Self::NFC => "nfc",
+            Self::BLE => "ble",
+            Self::INTERNAL => "internal"
+        };
+        serializer.serialize_str(s)
+    }
 }
 
 #[derive(Serialize)]
-pub struct WebAuthnCredentialCreationOpption {
-    challenge: String,
+pub struct ExcludeCredential {
+    type_: String,
+    id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    transports: Option<ExcludeCredentialTransport>
+}
+
+impl ExcludeCredential {
+    pub fn new(id: String, transports: Option<ExcludeCredentialTransport>) -> Self {
+        ExcludeCredential {
+            type_: "public-key".to_owned(),  // https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials#Value
+            id,
+            transports,
+        }
+    }
+}
+
+
+#[derive(Serialize)]
+pub struct PublicKeyCredentialCreationOptions {
+    // ref: https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions
     rp: RelyingParty,
     user: User,
+    challenge: String,
     #[serde(rename(serialize = "pubKeyCredParams"))]
     pub_key_cred_params: Vec<CredParam>,
-    timeout: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    timeout: Option<usize>,
     #[serde(rename(serialize = "excludeCredentials"))]
-    exclude_credentials: Vec<String>,  // TODO: ensure thie correct type
-    attestation: AttestationForm,
-    extensions: Extension,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    exclude_credentials: Option<Vec<ExcludeCredential>>,
     #[serde(rename(serialize = "authenticatorSelection"))]
-    authenticator_selection: Option<AuthenticatorSelection>
+    #[serde(skip_serializing_if = "Option::is_none")]
+    authenticator_selection: Option<AuthenticatorSelection>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    attestation: Option<Attestation>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    extensions: Option<Extension>,
 }
 
-impl WebAuthnCredentialCreationOpption {
+impl PublicKeyCredentialCreationOptions {
     pub fn new(
-        challenge: String,
-        rp_name: String,
-        rp_id: String,
-        user_id: String,
-        username: String,
-        display_name: String,
-        icon_url: String,
-        timeout: Option<u32>,
-        attestation: Option<AttestationForm>,
-        user_verification: Option<UserVerification>,
+        rp: RelyingParty,
+        user: User,
+        challenge_length: usize,
+        pub_key_cred_params: Vec<CredParam>,
+        timeout: Option<usize>,
+        exclude_credentials: Option<Vec<ExcludeCredential>>,
+        authenticator_selection: Option<AuthenticatorSelection>,
+        attestation: Option<Attestation>,
+        extensions: Option<Extension>,
     ) -> Self {
-        let timeout = timeout.unwrap_or(60000);
-        let attestation = attestation.unwrap_or(AttestationForm::Direct);
-        let rp = RelyingParty {
-            name: rp_name,
-            id: rp_id,
-        };
-        let user = User {
-            id: user_id,
-            name: username,
-            display_name: display_name,
-            icon: Some(icon_url),
-        };
-        let pub_key_cred_params = vec![
-            CredParam { alg: Algorithm::ES256, type_: "public_key".to_owned() },
-            CredParam { alg: Algorithm::PS256, type_: "public_key".to_owned() },
-            CredParam { alg: Algorithm::RS256, type_: "public_key".to_owned() },
-        ];
-        let extensions = Extension { webauthn_loc: true };
-        let authenticator_selection = user_verification
-            .map(|v| AuthenticatorSelection { user_verification: v });
-        WebAuthnCredentialCreationOpption {
-            challenge: challenge,
+        PublicKeyCredentialCreationOptions {
             rp,
             user,
+            challenge: generate_random(challenge_length),
             pub_key_cred_params,
-            timeout: timeout,
-            exclude_credentials: vec![],
-            attestation: attestation,
-            extensions,
+            timeout,
+            exclude_credentials,
             authenticator_selection,
+            attestation,
+            extensions,
         }
     }
 }

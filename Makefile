@@ -1,6 +1,6 @@
 .PHONY:
 
-build-rust:
+build-rs:
 	cargo build
 
 build-js:
