@@ -1,5 +1,3 @@
-use failure::Error;
-
 #[derive(Debug, Fail)]
 pub enum WebAuthnError {
     #[fail(display = "invalid COSE key")]

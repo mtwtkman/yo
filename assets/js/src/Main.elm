@@ -1,9 +1,8 @@
 module Main exposing (main)
 
+import Anonymous
 import Browser exposing (Document)
-import Html exposing (Html, button, div, input, label, text)
-import Html.Attributes exposing (disabled, name, placeholder, value)
-import Html.Events exposing (onClick, onInput)
+import Html exposing (div, h1, text)
 
 
 
@@ -24,10 +23,8 @@ main =
 -- MODEL
 
 
-type alias Model =
-    { name : Maybe String
-    , registered : Bool
-    }
+type Model
+    = Anonymous Anonymous.Model
 
 
 
@@ -36,7 +33,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { name = Nothing, registered = False }, Cmd.none )
+    updateWith Anonymous GotAnonymousMsg Anonymous.init
 
 
 
@@ -44,30 +41,22 @@ init _ =
 
 
 type Msg
-    = Anonymous
-    | Register
-    | UpdateName String
+    = Unknown
+    | GotAnonymousMsg Anonymous.Msg
+
+
+updateWith : (subModel -> Model) -> (subMsg -> Msg) -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg ( subModel, subCmd ) =
+    ( toModel subModel, Cmd.map toMsg subCmd )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        Anonymous ->
-            ( model, Cmd.none )
+    case ( model, msg ) of
+        ( Anonymous subModel, GotAnonymousMsg subMsg ) ->
+            Anonymous.update subMsg subModel |> updateWith Anonymous GotAnonymousMsg
 
-        UpdateName value ->
-            ( { model
-                | name =
-                    if String.isEmpty value then
-                        Nothing
-
-                    else
-                        Just value
-              }
-            , Cmd.none
-            )
-
-        Register ->
+        ( _, _ ) ->
             ( model, Cmd.none )
 
 
@@ -79,41 +68,13 @@ view : Model -> Document Msg
 view model =
     { title = "yo"
     , body =
-        [ div []
-            [ label []
-                [ text "Name"
-                , input
-                    [ placeholder "name"
-                    , name "name"
-                    , onInput UpdateName
-                    , value <| Maybe.withDefault "" model.name
-                    ]
-                    []
-                ]
-            , button
-                [ onClick Register
-                , isNothing model.name |> disabled
-                ]
-                [ text "register" ]
-            ]
+        let
+            subView =
+                case model of
+                    Anonymous subModel ->
+                        Html.map GotAnonymousMsg (Anonymous.view subModel)
+        in
+        [ div [] [ h1 [] [ text "yo" ] ]
+        , subView
         ]
     }
-
-
-
--- HELPER
-
-
-isJust : Maybe a -> Bool
-isJust maybeValue =
-    case maybeValue of
-        Just v ->
-            True
-
-        Nothing ->
-            False
-
-
-isNothing : Maybe a -> Bool
-isNothing maybeValue =
-    isJust maybeValue |> not

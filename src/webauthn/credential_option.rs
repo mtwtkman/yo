@@ -112,7 +112,7 @@ struct AuthenticatorSelection {
 }
 
 #[derive(Serialize)]
-pub struct WebAuthnMakeCredentialOptions {
+pub struct WebAuthnCredentialCreationOpption {
     challenge: String,
     rp: RelyingParty,
     user: User,
@@ -127,7 +127,7 @@ pub struct WebAuthnMakeCredentialOptions {
     authenticator_selection: Option<AuthenticatorSelection>
 }
 
-impl WebAuthnMakeCredentialOptions {
+impl WebAuthnCredentialCreationOpption {
     pub fn new(
         challenge: String,
         rp_name: String,
@@ -160,7 +160,7 @@ impl WebAuthnMakeCredentialOptions {
         let extensions = Extension { webauthn_loc: true };
         let authenticator_selection = user_verification
             .map(|v| AuthenticatorSelection { user_verification: v });
-        WebAuthnMakeCredentialOptions {
+        WebAuthnCredentialCreationOpption {
             challenge: challenge,
             rp,
             user,

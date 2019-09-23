@@ -2,7 +2,20 @@
   <script src="assets/js/dist/app.js"></script>
 </head>
 <body>
+  <div id="app"></div>
   <script>
-    const app = Elm.Main.init();
+    const app = Elm.Main.init({
+      node: document.querySelector('#app'),
+    });
+    app.ports.createCredential.subscribe(async (options) => {
+      options.challenge = Uint8Array.from(options.challenge);
+      options.extensions['webauthn.loc'] = options.extensions.webauthnLoc;
+      delete options.extensions.webauthnLoc;
+      console.log(options);
+      const result = await navigator.credentials.create({
+        publicKey: options
+      });
+      console.log(result);
+    });
   </script>
 </body>
