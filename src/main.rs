@@ -53,7 +53,7 @@ fn validate_name(value: &str) -> Result<(), ValidationError>{
 fn begin_activate(register_form: web::Json<RegistrationForm>) -> HttpResponse {
     match register_form.validate() {
         Ok(()) => {
-            let rp = RelyingParty::new("yo", "yo", None);
+            let rp = RelyingParty::new("yo", "localhost", None);
             let user = User::new(&register_form.username, &register_form.display_name, None);
             let pub_key_cred_params = vec![Algorithm::ES256, Algorithm::PS256, Algorithm::RS256].into_iter().map(CredParam::new).collect();
             let body = PublicKeyCredentialCreationOptions::new(

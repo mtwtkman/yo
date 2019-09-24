@@ -14,6 +14,11 @@
         v.type = v.type_;
         delete v.type_;
       });
+      publicKey.attestation = 'none';
+      publicKey.authenticatorSelection = {
+        requireResidentKey: false,
+        userVerification: 'discouraged',
+      };
       console.log(publicKey);
       const result = await navigator.credentials.create({ publicKey });
       console.log(result);
