@@ -5124,6 +5124,69 @@ var elm$core$Basics$identity = function (x) {
 var author$project$Main$init = function (_n0) {
 	return A3(author$project$Main$updateWith, author$project$Main$Anonymous, author$project$Main$GotAnonymousMsg, author$project$Anonymous$init);
 };
+var author$project$Anonymous$ReceiveAssertion = function (a) {
+	return {$: 'ReceiveAssertion', a: a};
+};
+var elm$json$Json$Decode$value = _Json_decodeValue;
+var author$project$Anonymous$receiveAssertion = _Platform_incomingPort('receiveAssertion', elm$json$Json$Decode$value);
+var elm$core$Platform$Sub$batch = _Platform_batch;
+var author$project$Anonymous$subscriptions = function (model) {
+	return elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				author$project$Anonymous$receiveAssertion(author$project$Anonymous$ReceiveAssertion)
+			]));
+};
+var elm$core$Platform$Sub$map = _Platform_map;
+var author$project$Main$subscriptions = function (model) {
+	var anonymous = model.a;
+	return A2(
+		elm$core$Platform$Sub$map,
+		author$project$Main$GotAnonymousMsg,
+		author$project$Anonymous$subscriptions(anonymous));
+};
+var elm$json$Json$Decode$map2 = _Json_map2;
+var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = elm$json$Json$Decode$map2(elm$core$Basics$apR);
+var elm$json$Json$Decode$field = _Json_decodeField;
+var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A2(elm$json$Json$Decode$field, key, valDecoder),
+			decoder);
+	});
+var author$project$Anonymous$Assertion = F6(
+	function (id, attObj, clientData, rawId, registrationClientExtensions, type_) {
+		return {attObj: attObj, clientData: clientData, id: id, rawId: rawId, registrationClientExtensions: registrationClientExtensions, type_: type_};
+	});
+var elm$json$Json$Decode$string = _Json_decodeString;
+var elm$json$Json$Decode$succeed = _Json_succeed;
+var author$project$Anonymous$assertionDecoder = A3(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'type',
+	elm$json$Json$Decode$string,
+	A3(
+		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'registrationClientExtensions',
+		elm$json$Json$Decode$string,
+		A3(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'rawId',
+			elm$json$Json$Decode$string,
+			A3(
+				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'clientData',
+				elm$json$Json$Decode$string,
+				A3(
+					NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+					'attObj',
+					elm$json$Json$Decode$string,
+					A3(
+						NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+						'id',
+						elm$json$Json$Decode$string,
+						elm$json$Json$Decode$succeed(author$project$Anonymous$Assertion)))))));
+var author$project$Anonymous$createCredential = _Platform_outgoingPort('createCredential', elm$core$Basics$identity);
 var elm$json$Json$Encode$int = _Json_wrap;
 var elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -5148,76 +5211,69 @@ var elm$json$Json$Encode$object = function (pairs) {
 			pairs));
 };
 var elm$json$Json$Encode$string = _Json_wrap;
-var author$project$Anonymous$createCredential = _Platform_outgoingPort(
-	'createCredential',
-	function ($) {
-		return elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'challenge',
-					elm$json$Json$Encode$list(elm$json$Json$Encode$int)($.challenge)),
-					_Utils_Tuple2(
-					'pubKeyCredParams',
-					elm$json$Json$Encode$list(
-						function ($) {
-							return elm$json$Json$Encode$object(
-								_List_fromArray(
-									[
-										_Utils_Tuple2(
-										'alg',
-										elm$json$Json$Encode$int($.alg)),
-										_Utils_Tuple2(
-										'type_',
-										elm$json$Json$Encode$string($.type_))
-									]));
-						})($.pubKeyCredParams)),
-					_Utils_Tuple2(
-					'rp',
-					function ($) {
-						return elm$json$Json$Encode$object(
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'id',
-									elm$json$Json$Encode$string($.id)),
-									_Utils_Tuple2(
-									'name',
-									elm$json$Json$Encode$string($.name))
-								]));
-					}($.rp)),
-					_Utils_Tuple2(
-					'user',
-					function ($) {
-						return elm$json$Json$Encode$object(
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'displayName',
-									elm$json$Json$Encode$string($.displayName)),
-									_Utils_Tuple2(
-									'id',
-									elm$json$Json$Encode$list(elm$json$Json$Encode$int)($.id)),
-									_Utils_Tuple2(
-									'name',
-									elm$json$Json$Encode$string($.name))
-								]));
-					}($.user))
-				]));
-	});
+var author$project$Anonymous$encodedUserEncoder = function (user) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				A2(elm$json$Json$Encode$list, elm$json$Json$Encode$int, user.id)),
+				_Utils_Tuple2(
+				'name',
+				elm$json$Json$Encode$string(user.name)),
+				_Utils_Tuple2(
+				'displayName',
+				elm$json$Json$Encode$string(user.displayName))
+			]));
+};
+var author$project$Anonymous$pubKeyCredParamEncoder = function (param) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'alg',
+				elm$json$Json$Encode$int(param.alg)),
+				_Utils_Tuple2(
+				'type',
+				elm$json$Json$Encode$string(param.type_))
+			]));
+};
+var author$project$Anonymous$pubKeyCredParamsEncoder = function (params) {
+	return A2(elm$json$Json$Encode$list, author$project$Anonymous$pubKeyCredParamEncoder, params);
+};
+var author$project$Anonymous$relyingPartyEncoder = function (rp) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'name',
+				elm$json$Json$Encode$string(rp.name)),
+				_Utils_Tuple2(
+				'id',
+				elm$json$Json$Encode$string(rp.id))
+			]));
+};
+var author$project$Anonymous$publicKeyCredentialCreationOptionEncoder = function (option) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'challenge',
+				A2(elm$json$Json$Encode$list, elm$json$Json$Encode$int, option.challenge)),
+				_Utils_Tuple2(
+				'rp',
+				author$project$Anonymous$relyingPartyEncoder(option.rp)),
+				_Utils_Tuple2(
+				'user',
+				author$project$Anonymous$encodedUserEncoder(option.user)),
+				_Utils_Tuple2(
+				'pubKeyCredParams',
+				author$project$Anonymous$pubKeyCredParamsEncoder(option.pubKeyCredParams))
+			]));
+};
 var author$project$Anonymous$GotCredentialCreationOption = function (a) {
 	return {$: 'GotCredentialCreationOption', a: a};
 };
-var elm$json$Json$Decode$map2 = _Json_map2;
-var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = elm$json$Json$Decode$map2(elm$core$Basics$apR);
-var elm$json$Json$Decode$field = _Json_decodeField;
-var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
-	function (key, valDecoder, decoder) {
-		return A2(
-			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
-			A2(elm$json$Json$Decode$field, key, valDecoder),
-			decoder);
-	});
 var author$project$Anonymous$CredentialCreationOpption = F4(
 	function (challenge, rp, user, pubKeyCredParams) {
 		return {challenge: challenge, pubKeyCredParams: pubKeyCredParams, rp: rp, user: user};
@@ -5227,8 +5283,6 @@ var author$project$Anonymous$PubKeyCredParam = F2(
 		return {alg: alg, type_: type_};
 	});
 var elm$json$Json$Decode$int = _Json_decodeInt;
-var elm$json$Json$Decode$string = _Json_decodeString;
-var elm$json$Json$Decode$succeed = _Json_succeed;
 var author$project$Anonymous$pubKeyCredParamDecoder = A3(
 	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'type',
@@ -6519,9 +6573,11 @@ var author$project$Anonymous$transformCredentialCreationOption = function (crede
 		user: encodedUser
 	};
 };
+var elm$core$Debug$log = _Debug_log;
 var elm$core$String$isEmpty = function (string) {
 	return string === '';
 };
+var elm$json$Json$Decode$decodeValue = _Json_run;
 var author$project$Anonymous$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6551,14 +6607,25 @@ var author$project$Anonymous$update = F2(
 							displayName: A2(elm$core$Maybe$withDefault, '', model.displayName),
 							username: A2(elm$core$Maybe$withDefault, '', model.username)
 						}));
-			default:
+			case 'GotCredentialCreationOption':
 				var result = msg.a;
 				if (result.$ === 'Ok') {
 					var response = result.a;
 					var publicKeyCredentialCreationOption = author$project$Anonymous$transformCredentialCreationOption(response);
 					return _Utils_Tuple2(
 						model,
-						author$project$Anonymous$createCredential(publicKeyCredentialCreationOption));
+						author$project$Anonymous$createCredential(
+							author$project$Anonymous$publicKeyCredentialCreationOptionEncoder(publicKeyCredentialCreationOption)));
+				} else {
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				}
+			default:
+				var value = msg.a;
+				var _n2 = A2(elm$json$Json$Decode$decodeValue, author$project$Anonymous$assertionDecoder, value);
+				if (_n2.$ === 'Ok') {
+					var assertion = _n2.a;
+					var _n3 = A2(elm$core$Debug$log, 'assertion', assertion);
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
@@ -7005,16 +7072,7 @@ var elm$url$Url$fromString = function (str) {
 		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
 };
 var elm$browser$Browser$document = _Browser_document;
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var author$project$Main$main = elm$browser$Browser$document(
-	{
-		init: author$project$Main$init,
-		subscriptions: function (_n0) {
-			return elm$core$Platform$Sub$none;
-		},
-		update: author$project$Main$update,
-		view: author$project$Main$view
-	});
+	{init: author$project$Main$init, subscriptions: author$project$Main$subscriptions, update: author$project$Main$update, view: author$project$Main$view});
 _Platform_export({'Main':{'init':author$project$Main$main(
 	elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));

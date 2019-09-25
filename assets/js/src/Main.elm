@@ -15,7 +15,7 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
 
 
@@ -78,3 +78,14 @@ view model =
         , subView
         ]
     }
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model of
+        Anonymous anonymous ->
+            Sub.map GotAnonymousMsg (Anonymous.subscriptions anonymous)
