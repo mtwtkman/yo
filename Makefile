@@ -12,4 +12,4 @@ elm-install:
 build: build-rust build-js
 
 start:
-	cargo run
+	systemfd --no-pid -s https::0.0.0.0:55301 -- cargo watch -x run

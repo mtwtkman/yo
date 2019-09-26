@@ -65,10 +65,10 @@ impl Serialize for Algorithm {
 
 #[derive(Serialize)]
 pub struct RelyingParty {
-    name: String,
-    id: String,
+    pub name: String,
+    pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    icon: Option<String>
+    pub icon: Option<String>
 }
 
 impl RelyingParty {
@@ -81,14 +81,14 @@ impl RelyingParty {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct User {
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
     #[serde(rename(serialize = "displayName"))]
-    display_name: String,
+    pub display_name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    icon: Option<String>,
+    pub icon: Option<String>,
 }
 
 impl User {
@@ -244,23 +244,23 @@ impl ExcludeCredential {
 #[derive(Serialize)]
 pub struct PublicKeyCredentialCreationOptions {
     // ref: https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions
-    rp: RelyingParty,
-    user: User,
-    challenge: String,
+    pub rp: RelyingParty,
+    pub user: User,
+    pub challenge: String,
     #[serde(rename(serialize = "pubKeyCredParams"))]
-    pub_key_cred_params: Vec<CredParam>,
+    pub pub_key_cred_params: Vec<CredParam>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    timeout: Option<usize>,
+    pub timeout: Option<usize>,
     #[serde(rename(serialize = "excludeCredentials"))]
     #[serde(skip_serializing_if = "Option::is_none")]
-    exclude_credentials: Option<Vec<ExcludeCredential>>,
+    pub exclude_credentials: Option<Vec<ExcludeCredential>>,
     #[serde(rename(serialize = "authenticatorSelection"))]
     #[serde(skip_serializing_if = "Option::is_none")]
-    authenticator_selection: Option<AuthenticatorSelection>,
+    pub authenticator_selection: Option<AuthenticatorSelection>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    attestation: Option<Attestation>,
+    pub attestation: Option<Attestation>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    extensions: Option<Extension>,
+    pub extensions: Option<Extension>,
 }
 
 impl PublicKeyCredentialCreationOptions {

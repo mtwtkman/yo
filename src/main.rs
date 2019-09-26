@@ -10,14 +10,16 @@ extern crate serde_json;
 #[macro_use] extern crate validator_derive;
 extern crate validator;
 extern crate actix_session;
+extern crate listenfd;
 
-use actix_session::CookieSession;
+use actix_session::{Session, CookieSession};
 use actix_files::NamedFile;
 use actix_web::{App, HttpServer, middleware, web, HttpResponse};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use serde::{Serialize, Deserialize};
 use std::path::PathBuf;
 use validator::{Validate, ValidationError};
+use listenfd::ListenFd;
 
 mod webauthn;
 mod helper;
@@ -50,13 +52,13 @@ fn validate_name(value: &str) -> Result<(), ValidationError>{
     }
 }
 
-fn begin_activate(register_form: web::Json<RegistrationForm>) -> HttpResponse {
+fn begin_activate(session: Session, register_form: web::Json<RegistrationForm>) -> HttpResponse {
     match register_form.validate() {
         Ok(()) => {
             let rp = RelyingParty::new("yo", "localhost", None);
             let user = User::new(&register_form.username, &register_form.display_name, None);
             let pub_key_cred_params = vec![Algorithm::ES256, Algorithm::PS256, Algorithm::RS256].into_iter().map(CredParam::new).collect();
-            let body = PublicKeyCredentialCreationOptions::new(
+            let options = PublicKeyCredentialCreationOptions::new(
                 rp,
                 user,
                 32,
@@ -67,7 +69,9 @@ fn begin_activate(register_form: web::Json<RegistrationForm>) -> HttpResponse {
                 None,
                 None,
             );
-            HttpResponse::Ok().json(body)
+            session.set("username", &options.user.name);
+            session.set("display_name", &options.user.display_name);
+            HttpResponse::Ok().json(options)
         }
         Err(_) => HttpResponse::BadRequest().finish(),  // TODO: error handling
     }
@@ -76,6 +80,7 @@ fn begin_activate(register_form: web::Json<RegistrationForm>) -> HttpResponse {
 fn main() {
     std::env::set_var("RUST_LOG", "actix_web=debug");
     env_logger::init();
+    let mut listenfd = ListenFd::from_env();
 
     let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
     builder
@@ -83,7 +88,7 @@ fn main() {
         .unwrap();
     builder.set_certificate_chain_file("cert.pem").unwrap();
 
-    HttpServer::new(|| {
+    let mut server = HttpServer::new(|| {
         App::new()
             .wrap(middleware::Logger::default())
             .wrap(
@@ -95,9 +100,12 @@ fn main() {
             .service(
                 web::resource("/begin_activate").route(web::post().to(begin_activate))
             )
-    })
-    .bind_ssl("0.0.0.0:55301", builder)
-    .unwrap()
-    .run()
-    .unwrap();
+    });
+
+    server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {
+        server.listen_ssl(l, builder).unwrap()
+    } else {
+        server.bind_ssl("0.0.0.0:55301", builder).unwrap()
+    };
+    server.run().unwrap();
 }
