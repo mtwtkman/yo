@@ -52,7 +52,8 @@ fn validate_name(value: &str) -> Result<(), ValidationError>{
     }
 }
 
-fn begin_activate(session: Session, register_form: web::Json<RegistrationForm>) -> HttpResponse {
+fn begin_activate(session: Session, register_form: web::Json<RegistrationForm>) -> actix_web::Result<HttpResponse> {
+    session.clear();
     match register_form.validate() {
         Ok(()) => {
             let rp = RelyingParty::new("yo", "localhost", None);
@@ -69,11 +70,13 @@ fn begin_activate(session: Session, register_form: web::Json<RegistrationForm>) 
                 None,
                 None,
             );
-            session.set("username", &options.user.name);
-            session.set("display_name", &options.user.display_name);
-            HttpResponse::Ok().json(options)
+            session.set("username", &options.user.name)?;
+            session.set("display_name", &options.user.display_name)?;
+            session.set("challenge", &options.challenge)?;
+            session.set("ukey", &options.user.id)?;
+            Ok(HttpResponse::Ok().json(options))
         }
-        Err(_) => HttpResponse::BadRequest().finish(),  // TODO: error handling
+        Err(_) => Ok(HttpResponse::BadRequest().finish()),  // TODO: error handling
     }
 }
 
