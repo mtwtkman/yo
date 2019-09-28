@@ -32,6 +32,7 @@ use webauthn::{
     Algorithm,
 };
 
+
 fn index() -> actix_web::Result<NamedFile> {
     let path = PathBuf::from("index.html");
     Ok(NamedFile::open(path)?)

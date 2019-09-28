@@ -22,3 +22,4 @@ validator_derive = "0.9"
 rand = "0.7"
 base64 = "0.10"
 listenfd = "0.3"
+actix-redis = { vrsion = "0.6", features = ["web"] }

@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  web:
+    build: .
+    command: make start
+    volumes:
+      - ./Makefile:/app/Makefile
+      - ./src:/app/src
+      - ./Cargo.toml:/app/Cargo.toml
+      - ./Cargo.lock:/app/Cargo.lock
+      - ./assets:/app/assets
+      - ./cert.pem:/app/cert.pem
+      - ./key.pem:/app/key.pem
+      - ./index.html:/app/index.html
+    ports:
+      - 55301:55301
+    depends_on:
+      - redis
+  redis:
+    image: redis:alpine
