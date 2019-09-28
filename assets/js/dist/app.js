@@ -6573,7 +6573,6 @@ var author$project$Anonymous$transformCredentialCreationOption = function (crede
 		user: encodedUser
 	};
 };
-var elm$core$Debug$log = _Debug_log;
 var elm$core$String$isEmpty = function (string) {
 	return string === '';
 };
@@ -6624,7 +6623,6 @@ var author$project$Anonymous$update = F2(
 				var _n2 = A2(elm$json$Json$Decode$decodeValue, author$project$Anonymous$assertionDecoder, value);
 				if (_n2.$ === 'Ok') {
 					var assertion = _n2.a;
-					var _n3 = A2(elm$core$Debug$log, 'assertion', assertion);
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);

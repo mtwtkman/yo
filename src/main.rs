@@ -11,8 +11,9 @@ extern crate serde_json;
 extern crate validator;
 extern crate actix_session;
 extern crate listenfd;
+extern crate actix_redis;
 
-use actix_session::{Session, CookieSession};
+use actix_session::Session;
 use actix_files::NamedFile;
 use actix_web::{App, HttpServer, middleware, web, HttpResponse};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
@@ -20,6 +21,7 @@ use serde::{Serialize, Deserialize};
 use std::path::PathBuf;
 use validator::{Validate, ValidationError};
 use listenfd::ListenFd;
+use actix_redis::RedisSession;
 
 mod webauthn;
 mod helper;
@@ -95,11 +97,8 @@ fn main() {
     let mut server = HttpServer::new(|| {
         App::new()
             .wrap(middleware::Logger::default())
-            .wrap(
-                CookieSession::signed(&[0; 32])
-                    .name("yo-session")
-                    .secure(true)
-            ).service(actix_files::Files::new("/assets", "./assets").show_files_listing())
+            .wrap(RedisSession::new("redis:6379", &[0; 32]))
+            .service(actix_files::Files::new("/assets", "./assets").show_files_listing())
             .route("/", web::get().to(index))
             .service(
                 web::resource("/begin_activate").route(web::post().to(begin_activate))
