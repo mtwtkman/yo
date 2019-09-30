@@ -1,46 +1,20 @@
 use serde::{Serialize, Serializer};
 use crate::helper::generate_random;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize)]
+#[serde(rename(serialize = "lowercase"))]
 pub enum Attestation {
     None,
     Indirect,
     Direct,
 }
 
-impl Serialize for Attestation {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-    {
-        let s = match self {
-            Self::None => "none",
-            Self::Indirect => "indirect",
-            Self::Direct => "direct",
-        };
-        serializer.serialize_str(s)
-    }
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize)]
+#[serde(rename(serialize = "lowercase"))]
 pub enum UserVerification {
     Required,
     Preferred,
     Discouraged,
-}
-
-impl Serialize for UserVerification {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-    {
-        let s = match self {
-            Self::Required => "required",
-            Self::Preferred => "preferred",
-            Self::Discouraged => "discouraged",
-        };
-        serializer.serialize_str(s)
-    }
 }
 
 pub enum Algorithm {
@@ -105,15 +79,14 @@ impl User {
 #[derive(Serialize)]
 pub struct CredParam {
     alg: Algorithm,
-    #[serde(rename(serialize = "type"))]
-    type_: String,
+    r#type: String,
 }
 
 impl CredParam {
     pub fn new(alg: Algorithm) -> Self {
         CredParam {
             alg,
-            type_: "public-key".to_owned(),
+            r#type: "public-key".to_owned(),
         }
     }
 }
@@ -224,7 +197,7 @@ impl Serialize for ExcludeCredentialTransport {
 
 #[derive(Serialize)]
 pub struct ExcludeCredential {
-    type_: String,
+    r#type: String,
     id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     transports: Option<ExcludeCredentialTransport>
@@ -233,7 +206,7 @@ pub struct ExcludeCredential {
 impl ExcludeCredential {
     pub fn new(id: String, transports: Option<ExcludeCredentialTransport>) -> Self {
         ExcludeCredential {
-            type_: "public-key".to_owned(),  // https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials#Value
+            r#type: "public-key".to_owned(),  // https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions/excludeCredentials#Value
             id,
             transports,
         }

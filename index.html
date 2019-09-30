@@ -19,13 +19,12 @@
     app.ports.createCredential.subscribe(async publicKey => {
       publicKey.challenge = Uint8Array.from(publicKey.challenge);  // FIXME: do this in elm world.
       publicKey.user.id = Uint8Array.from(publicKey.user.id);
-      console.log(publicKey);
       const credential = await navigator.credentials.create({ publicKey });
       const attObj = new Uint8Array(credential.response.attestationObject);
       const clientDataJSON = new Uint8Array(credential.response.clientDataJSON);
       const rawId = new Uint8Array(credential.raw_id);
       const registrationClientExtensions = credential.getClientExtensionResults();
-      const assertion = {
+      const attestationResponse = {
         id: credential.id,
         rawId: await b64enc(rawId),
         type: credential.type,
@@ -33,8 +32,8 @@
         clientData: await b64enc(clientDataJSON),
         registrationClientExtensions: JSON.stringify(registrationClientExtensions),
       };
-      console.log(assertion);
-      app.ports.receiveAssertion.send(assertion);
+      console.log(attestationResponse);
+      app.ports.receiveAttestationResponse.send(attestationResponse);
     });
   </script>
 </body>

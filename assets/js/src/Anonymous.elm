@@ -1,14 +1,19 @@
-port module Anonymous exposing (Model, Msg, createCredential, init, receiveAssertion, subscriptions, update, view)
+port module Anonymous exposing (Model, Msg, createCredential, init, subscriptions, update, view)
 
-import Base64
-import Char
-import Debug exposing (log)
+import AttestationResponse exposing (attestationResponseDecoder)
+import CredentialOption
+    exposing
+        ( CredentialCreationOpption
+        , PublicKeyCredentialCreationOption
+        , credentialCreationOptionDecoder
+        , publicKeyCredentialCreationOptionEncoder
+        )
+import Helper exposing (isJust, toCharCodePoints)
 import Html exposing (Html, button, div, input, label, text)
 import Html.Attributes exposing (disabled, placeholder, value)
 import Html.Events exposing (onClick, onInput)
 import Http
-import Json.Decode as D exposing (Decoder, bool, int, list, maybe, string)
-import Json.Decode.Pipeline exposing (required)
+import Json.Decode as D
 import Json.Encode as E exposing (Value)
 
 
@@ -19,28 +24,7 @@ import Json.Encode as E exposing (Value)
 port createCredential : Value -> Cmd msg
 
 
-port receiveAssertion : (Value -> msg) -> Sub msg
-
-
-type alias Assertion =
-    { id : String
-    , attObj : String
-    , clientData : String
-    , rawId : String
-    , registrationClientExtensions : String
-    , type_ : String
-    }
-
-
-assertionDecoder : Decoder Assertion
-assertionDecoder =
-    D.succeed Assertion
-        |> required "id" string
-        |> required "attObj" string
-        |> required "clientData" string
-        |> required "rawId" string
-        |> required "registrationClientExtensions" string
-        |> required "type" string
+port receiveAttestationResponse : (Value -> msg) -> Sub msg
 
 
 
@@ -71,7 +55,7 @@ type Msg
     | UpdateDisplayName String
     | CreateCredentialCreationOpption
     | GotCredentialCreationOption (Result Http.Error CredentialCreationOpption)
-    | ReceiveAssertion Value
+    | ReceiveAttestationResponse Value
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -121,8 +105,8 @@ update msg model =
                 Err _ ->
                     ( model, Cmd.none )
 
-        ReceiveAssertion value ->
-            case D.decodeValue assertionDecoder value of
+        ReceiveAttestationResponse value ->
+            case D.decodeValue attestationResponseDecoder value of
                 Ok assertion ->
                     ( model, Cmd.none )
 
@@ -130,73 +114,23 @@ update msg model =
                     ( model, Cmd.none )
 
 
-publicKeyCredentialCreationOptionEncoder : PublicKeyCredentialCreationOption -> Value
-publicKeyCredentialCreationOptionEncoder option =
-    E.object
-        [ ( "challenge", E.list E.int option.challenge )
-        , ( "rp", relyingPartyEncoder option.rp )
-        , ( "user", encodedUserEncoder option.user )
-        , ( "pubKeyCredParams", pubKeyCredParamsEncoder option.pubKeyCredParams )
-        ]
-
-
-type alias EncodedUser =
-    { id : List Int
-    , name : String
-    , displayName : String
-    }
-
-
-encodedUserEncoder : EncodedUser -> Value
-encodedUserEncoder user =
-    E.object
-        [ ( "id", E.list E.int user.id )
-        , ( "name", E.string user.name )
-        , ( "displayName", E.string user.displayName )
-        ]
-
-
-type alias AuthenticatorSelection =
-    { requireResidentKey : Bool
-    , userVerification : String
-    }
-
-
-type alias PublicKeyCredentialCreationOption =
-    { challenge : List Int
-    , rp : RelyingParty
-    , user : EncodedUser
-    , pubKeyCredParams : PubKeyCredParams
-    }
-
-
-toCharCodePoints : String -> List Int
-toCharCodePoints encoded =
-    case Base64.decode encoded of
-        Err _ ->
-            []
-
-        Ok decoded ->
-            List.map Char.toCode <| String.toList decoded
-
-
 transformCredentialCreationOption : CredentialCreationOpption -> PublicKeyCredentialCreationOption
-transformCredentialCreationOption credentialCreationOption =
+transformCredentialCreationOption option =
     let
         encodedUser =
             let
                 user =
-                    credentialCreationOption.user
+                    option.user
             in
-            { id = toCharCodePoints credentialCreationOption.user.id
-            , name = credentialCreationOption.user.name
-            , displayName = credentialCreationOption.user.displayName
+            { id = toCharCodePoints option.user.id
+            , name = option.user.name
+            , displayName = option.user.displayName
             }
     in
-    { challenge = toCharCodePoints credentialCreationOption.challenge
-    , rp = credentialCreationOption.rp
+    { challenge = toCharCodePoints option.challenge
+    , rp = option.rp
     , user = encodedUser
-    , pubKeyCredParams = credentialCreationOption.pubKeyCredParams
+    , pubKeyCredParams = option.pubKeyCredParams
     }
 
 
@@ -245,15 +179,6 @@ view model =
 -- API
 
 
-registerUser : RegistrationForm -> Cmd Msg
-registerUser registration_form =
-    Http.post
-        { url = "/begin_activate"
-        , body = Http.jsonBody <| registrationEncoder registration_form
-        , expect = Http.expectJson GotCredentialCreationOption makeCredentialOptionDecoder
-        }
-
-
 type alias RegistrationForm =
     { username : String
     , displayName : String
@@ -268,106 +193,13 @@ registrationEncoder registration_form =
         ]
 
 
-type alias RelyingParty =
-    { name : String
-    , id : String
-    }
-
-
-relyingPartyEncoder : RelyingParty -> Value
-relyingPartyEncoder rp =
-    E.object
-        [ ( "name", E.string rp.name )
-        , ( "id", E.string rp.id )
-        ]
-
-
-relyingPartyDecoder : Decoder RelyingParty
-relyingPartyDecoder =
-    D.succeed RelyingParty
-        |> required "name" string
-        |> required "id" string
-
-
-type alias User =
-    { id : String
-    , name : String
-    , displayName : String
-    }
-
-
-userDecoder : Decoder User
-userDecoder =
-    D.succeed User
-        |> required "id" string
-        |> required "name" string
-        |> required "displayName" string
-
-
-type alias PubKeyCredParam =
-    { alg : Int
-    , type_ : String
-    }
-
-
-pubKeyCredParamEncoder : PubKeyCredParam -> Value
-pubKeyCredParamEncoder param =
-    E.object
-        [ ( "alg", E.int param.alg )
-        , ( "type", E.string param.type_ )
-        ]
-
-
-pubKeyCredParamDecoder : Decoder PubKeyCredParam
-pubKeyCredParamDecoder =
-    D.succeed PubKeyCredParam
-        |> required "alg" int
-        |> required "type" string
-
-
-type alias PubKeyCredParams =
-    List PubKeyCredParam
-
-
-pubKeyCredParamsEncoder : PubKeyCredParams -> Value
-pubKeyCredParamsEncoder params =
-    E.list pubKeyCredParamEncoder params
-
-
-pubKeyCredParamsDecoder : Decoder PubKeyCredParams
-pubKeyCredParamsDecoder =
-    list pubKeyCredParamDecoder
-
-
-type alias CredentialCreationOpption =
-    { challenge : String
-    , rp : RelyingParty
-    , user : User
-    , pubKeyCredParams : PubKeyCredParams
-    }
-
-
-makeCredentialOptionDecoder : Decoder CredentialCreationOpption
-makeCredentialOptionDecoder =
-    D.succeed CredentialCreationOpption
-        |> required "challenge" string
-        |> required "rp" relyingPartyDecoder
-        |> required "user" userDecoder
-        |> required "pubKeyCredParams" pubKeyCredParamsDecoder
-
-
-
--- HELPER
-
-
-isJust : Maybe a -> Bool
-isJust maybeValue =
-    case maybeValue of
-        Just v ->
-            True
-
-        Nothing ->
-            False
+registerUser : RegistrationForm -> Cmd Msg
+registerUser registration_form =
+    Http.post
+        { url = "/create_credential"
+        , body = Http.jsonBody <| registrationEncoder registration_form
+        , expect = Http.expectJson GotCredentialCreationOption credentialCreationOptionDecoder
+        }
 
 
 
@@ -376,4 +208,4 @@ isJust maybeValue =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch [ receiveAssertion ReceiveAssertion ]
+    Sub.batch [ receiveAttestationResponse ReceiveAttestationResponse ]

@@ -5124,17 +5124,17 @@ var elm$core$Basics$identity = function (x) {
 var author$project$Main$init = function (_n0) {
 	return A3(author$project$Main$updateWith, author$project$Main$Anonymous, author$project$Main$GotAnonymousMsg, author$project$Anonymous$init);
 };
-var author$project$Anonymous$ReceiveAssertion = function (a) {
-	return {$: 'ReceiveAssertion', a: a};
+var author$project$Anonymous$ReceiveAttestationResponse = function (a) {
+	return {$: 'ReceiveAttestationResponse', a: a};
 };
 var elm$json$Json$Decode$value = _Json_decodeValue;
-var author$project$Anonymous$receiveAssertion = _Platform_incomingPort('receiveAssertion', elm$json$Json$Decode$value);
+var author$project$Anonymous$receiveAttestationResponse = _Platform_incomingPort('receiveAttestationResponse', elm$json$Json$Decode$value);
 var elm$core$Platform$Sub$batch = _Platform_batch;
 var author$project$Anonymous$subscriptions = function (model) {
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				author$project$Anonymous$receiveAssertion(author$project$Anonymous$ReceiveAssertion)
+				author$project$Anonymous$receiveAttestationResponse(author$project$Anonymous$ReceiveAttestationResponse)
 			]));
 };
 var elm$core$Platform$Sub$map = _Platform_map;
@@ -5145,58 +5145,10 @@ var author$project$Main$subscriptions = function (model) {
 		author$project$Main$GotAnonymousMsg,
 		author$project$Anonymous$subscriptions(anonymous));
 };
-var elm$json$Json$Decode$map2 = _Json_map2;
-var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = elm$json$Json$Decode$map2(elm$core$Basics$apR);
-var elm$json$Json$Decode$field = _Json_decodeField;
-var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
-	function (key, valDecoder, decoder) {
-		return A2(
-			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
-			A2(elm$json$Json$Decode$field, key, valDecoder),
-			decoder);
-	});
-var author$project$Anonymous$Assertion = F6(
-	function (id, attObj, clientData, rawId, registrationClientExtensions, type_) {
-		return {attObj: attObj, clientData: clientData, id: id, rawId: rawId, registrationClientExtensions: registrationClientExtensions, type_: type_};
-	});
-var elm$json$Json$Decode$string = _Json_decodeString;
-var elm$json$Json$Decode$succeed = _Json_succeed;
-var author$project$Anonymous$assertionDecoder = A3(
-	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'type',
-	elm$json$Json$Decode$string,
-	A3(
-		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'registrationClientExtensions',
-		elm$json$Json$Decode$string,
-		A3(
-			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'rawId',
-			elm$json$Json$Decode$string,
-			A3(
-				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'clientData',
-				elm$json$Json$Decode$string,
-				A3(
-					NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'attObj',
-					elm$json$Json$Decode$string,
-					A3(
-						NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-						'id',
-						elm$json$Json$Decode$string,
-						elm$json$Json$Decode$succeed(author$project$Anonymous$Assertion)))))));
 var author$project$Anonymous$createCredential = _Platform_outgoingPort('createCredential', elm$core$Basics$identity);
-var elm$json$Json$Encode$int = _Json_wrap;
-var elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
+var author$project$Anonymous$GotCredentialCreationOption = function (a) {
+	return {$: 'GotCredentialCreationOption', a: a};
+};
 var elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -5211,136 +5163,6 @@ var elm$json$Json$Encode$object = function (pairs) {
 			pairs));
 };
 var elm$json$Json$Encode$string = _Json_wrap;
-var author$project$Anonymous$encodedUserEncoder = function (user) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'id',
-				A2(elm$json$Json$Encode$list, elm$json$Json$Encode$int, user.id)),
-				_Utils_Tuple2(
-				'name',
-				elm$json$Json$Encode$string(user.name)),
-				_Utils_Tuple2(
-				'displayName',
-				elm$json$Json$Encode$string(user.displayName))
-			]));
-};
-var author$project$Anonymous$pubKeyCredParamEncoder = function (param) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'alg',
-				elm$json$Json$Encode$int(param.alg)),
-				_Utils_Tuple2(
-				'type',
-				elm$json$Json$Encode$string(param.type_))
-			]));
-};
-var author$project$Anonymous$pubKeyCredParamsEncoder = function (params) {
-	return A2(elm$json$Json$Encode$list, author$project$Anonymous$pubKeyCredParamEncoder, params);
-};
-var author$project$Anonymous$relyingPartyEncoder = function (rp) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'name',
-				elm$json$Json$Encode$string(rp.name)),
-				_Utils_Tuple2(
-				'id',
-				elm$json$Json$Encode$string(rp.id))
-			]));
-};
-var author$project$Anonymous$publicKeyCredentialCreationOptionEncoder = function (option) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'challenge',
-				A2(elm$json$Json$Encode$list, elm$json$Json$Encode$int, option.challenge)),
-				_Utils_Tuple2(
-				'rp',
-				author$project$Anonymous$relyingPartyEncoder(option.rp)),
-				_Utils_Tuple2(
-				'user',
-				author$project$Anonymous$encodedUserEncoder(option.user)),
-				_Utils_Tuple2(
-				'pubKeyCredParams',
-				author$project$Anonymous$pubKeyCredParamsEncoder(option.pubKeyCredParams))
-			]));
-};
-var author$project$Anonymous$GotCredentialCreationOption = function (a) {
-	return {$: 'GotCredentialCreationOption', a: a};
-};
-var author$project$Anonymous$CredentialCreationOpption = F4(
-	function (challenge, rp, user, pubKeyCredParams) {
-		return {challenge: challenge, pubKeyCredParams: pubKeyCredParams, rp: rp, user: user};
-	});
-var author$project$Anonymous$PubKeyCredParam = F2(
-	function (alg, type_) {
-		return {alg: alg, type_: type_};
-	});
-var elm$json$Json$Decode$int = _Json_decodeInt;
-var author$project$Anonymous$pubKeyCredParamDecoder = A3(
-	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'type',
-	elm$json$Json$Decode$string,
-	A3(
-		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'alg',
-		elm$json$Json$Decode$int,
-		elm$json$Json$Decode$succeed(author$project$Anonymous$PubKeyCredParam)));
-var elm$json$Json$Decode$list = _Json_decodeList;
-var author$project$Anonymous$pubKeyCredParamsDecoder = elm$json$Json$Decode$list(author$project$Anonymous$pubKeyCredParamDecoder);
-var author$project$Anonymous$RelyingParty = F2(
-	function (name, id) {
-		return {id: id, name: name};
-	});
-var author$project$Anonymous$relyingPartyDecoder = A3(
-	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'id',
-	elm$json$Json$Decode$string,
-	A3(
-		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'name',
-		elm$json$Json$Decode$string,
-		elm$json$Json$Decode$succeed(author$project$Anonymous$RelyingParty)));
-var author$project$Anonymous$User = F3(
-	function (id, name, displayName) {
-		return {displayName: displayName, id: id, name: name};
-	});
-var author$project$Anonymous$userDecoder = A3(
-	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'displayName',
-	elm$json$Json$Decode$string,
-	A3(
-		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'name',
-		elm$json$Json$Decode$string,
-		A3(
-			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'id',
-			elm$json$Json$Decode$string,
-			elm$json$Json$Decode$succeed(author$project$Anonymous$User))));
-var author$project$Anonymous$makeCredentialOptionDecoder = A3(
-	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'pubKeyCredParams',
-	author$project$Anonymous$pubKeyCredParamsDecoder,
-	A3(
-		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'user',
-		author$project$Anonymous$userDecoder,
-		A3(
-			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'rp',
-			author$project$Anonymous$relyingPartyDecoder,
-			A3(
-				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'challenge',
-				elm$json$Json$Decode$string,
-				elm$json$Json$Decode$succeed(author$project$Anonymous$CredentialCreationOpption)))));
 var author$project$Anonymous$registrationEncoder = function (registration_form) {
 	return elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -5353,6 +5175,85 @@ var author$project$Anonymous$registrationEncoder = function (registration_form) 
 				elm$json$Json$Encode$string(registration_form.displayName))
 			]));
 };
+var elm$json$Json$Decode$map2 = _Json_map2;
+var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = elm$json$Json$Decode$map2(elm$core$Basics$apR);
+var elm$json$Json$Decode$field = _Json_decodeField;
+var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A2(elm$json$Json$Decode$field, key, valDecoder),
+			decoder);
+	});
+var author$project$CredentialOption$CredentialCreationOpption = F4(
+	function (challenge, rp, user, pubKeyCredParams) {
+		return {challenge: challenge, pubKeyCredParams: pubKeyCredParams, rp: rp, user: user};
+	});
+var author$project$CredentialOption$PubKeyCredParam = F2(
+	function (alg, type_) {
+		return {alg: alg, type_: type_};
+	});
+var elm$json$Json$Decode$int = _Json_decodeInt;
+var elm$json$Json$Decode$string = _Json_decodeString;
+var elm$json$Json$Decode$succeed = _Json_succeed;
+var author$project$CredentialOption$pubKeyCredParamDecoder = A3(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'type',
+	elm$json$Json$Decode$string,
+	A3(
+		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'alg',
+		elm$json$Json$Decode$int,
+		elm$json$Json$Decode$succeed(author$project$CredentialOption$PubKeyCredParam)));
+var elm$json$Json$Decode$list = _Json_decodeList;
+var author$project$CredentialOption$pubKeyCredParamsDecoder = elm$json$Json$Decode$list(author$project$CredentialOption$pubKeyCredParamDecoder);
+var author$project$CredentialOption$RelyingParty = F2(
+	function (name, id) {
+		return {id: id, name: name};
+	});
+var author$project$CredentialOption$relyingPartyDecoder = A3(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'id',
+	elm$json$Json$Decode$string,
+	A3(
+		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'name',
+		elm$json$Json$Decode$string,
+		elm$json$Json$Decode$succeed(author$project$CredentialOption$RelyingParty)));
+var author$project$CredentialOption$User = F3(
+	function (id, name, displayName) {
+		return {displayName: displayName, id: id, name: name};
+	});
+var author$project$CredentialOption$userDecoder = A3(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'displayName',
+	elm$json$Json$Decode$string,
+	A3(
+		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'name',
+		elm$json$Json$Decode$string,
+		A3(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'id',
+			elm$json$Json$Decode$string,
+			elm$json$Json$Decode$succeed(author$project$CredentialOption$User))));
+var author$project$CredentialOption$credentialCreationOptionDecoder = A3(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'pubKeyCredParams',
+	author$project$CredentialOption$pubKeyCredParamsDecoder,
+	A3(
+		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'user',
+		author$project$CredentialOption$userDecoder,
+		A3(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'rp',
+			author$project$CredentialOption$relyingPartyDecoder,
+			A3(
+				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'challenge',
+				elm$json$Json$Decode$string,
+				elm$json$Json$Decode$succeed(author$project$CredentialOption$CredentialCreationOpption)))));
 var elm$core$Result$mapError = F2(
 	function (f, result) {
 		if (result.$ === 'Ok') {
@@ -6241,8 +6142,8 @@ var author$project$Anonymous$registerUser = function (registration_form) {
 		{
 			body: elm$http$Http$jsonBody(
 				author$project$Anonymous$registrationEncoder(registration_form)),
-			expect: A2(elm$http$Http$expectJson, author$project$Anonymous$GotCredentialCreationOption, author$project$Anonymous$makeCredentialOptionDecoder),
-			url: '/begin_activate'
+			expect: A2(elm$http$Http$expectJson, author$project$Anonymous$GotCredentialCreationOption, author$project$CredentialOption$credentialCreationOptionDecoder),
+			url: '/create_credential'
 		});
 };
 var elm$core$List$map = F2(
@@ -6545,7 +6446,7 @@ var truqu$elm_base64$Base64$Decode$validateAndDecode = function (input) {
 };
 var truqu$elm_base64$Base64$Decode$decode = A2(elm$core$Basics$composeR, truqu$elm_base64$Base64$Decode$pad, truqu$elm_base64$Base64$Decode$validateAndDecode);
 var truqu$elm_base64$Base64$decode = truqu$elm_base64$Base64$Decode$decode;
-var author$project$Anonymous$toCharCodePoints = function (encoded) {
+var author$project$Helper$toCharCodePoints = function (encoded) {
 	var _n0 = truqu$elm_base64$Base64$decode(encoded);
 	if (_n0.$ === 'Err') {
 		return _List_Nil;
@@ -6557,21 +6458,120 @@ var author$project$Anonymous$toCharCodePoints = function (encoded) {
 			elm$core$String$toList(decoded));
 	}
 };
-var author$project$Anonymous$transformCredentialCreationOption = function (credentialCreationOption) {
+var author$project$Anonymous$transformCredentialCreationOption = function (option) {
 	var encodedUser = function () {
-		var user = credentialCreationOption.user;
+		var user = option.user;
 		return {
-			displayName: credentialCreationOption.user.displayName,
-			id: author$project$Anonymous$toCharCodePoints(credentialCreationOption.user.id),
-			name: credentialCreationOption.user.name
+			displayName: option.user.displayName,
+			id: author$project$Helper$toCharCodePoints(option.user.id),
+			name: option.user.name
 		};
 	}();
 	return {
-		challenge: author$project$Anonymous$toCharCodePoints(credentialCreationOption.challenge),
-		pubKeyCredParams: credentialCreationOption.pubKeyCredParams,
-		rp: credentialCreationOption.rp,
+		challenge: author$project$Helper$toCharCodePoints(option.challenge),
+		pubKeyCredParams: option.pubKeyCredParams,
+		rp: option.rp,
 		user: encodedUser
 	};
+};
+var author$project$AttestationResponse$AttestationResponse = F6(
+	function (id, attObj, clientData, rawId, registrationClientExtensions, type_) {
+		return {attObj: attObj, clientData: clientData, id: id, rawId: rawId, registrationClientExtensions: registrationClientExtensions, type_: type_};
+	});
+var author$project$AttestationResponse$attestationResponseDecoder = A3(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'type',
+	elm$json$Json$Decode$string,
+	A3(
+		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'registrationClientExtensions',
+		elm$json$Json$Decode$string,
+		A3(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'rawId',
+			elm$json$Json$Decode$string,
+			A3(
+				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'clientData',
+				elm$json$Json$Decode$string,
+				A3(
+					NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+					'attObj',
+					elm$json$Json$Decode$string,
+					A3(
+						NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+						'id',
+						elm$json$Json$Decode$string,
+						elm$json$Json$Decode$succeed(author$project$AttestationResponse$AttestationResponse)))))));
+var elm$json$Json$Encode$int = _Json_wrap;
+var elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var author$project$CredentialOption$encodedUserEncoder = function (user) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				A2(elm$json$Json$Encode$list, elm$json$Json$Encode$int, user.id)),
+				_Utils_Tuple2(
+				'name',
+				elm$json$Json$Encode$string(user.name)),
+				_Utils_Tuple2(
+				'displayName',
+				elm$json$Json$Encode$string(user.displayName))
+			]));
+};
+var author$project$CredentialOption$pubKeyCredParamEncoder = function (param) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'alg',
+				elm$json$Json$Encode$int(param.alg)),
+				_Utils_Tuple2(
+				'type',
+				elm$json$Json$Encode$string(param.type_))
+			]));
+};
+var author$project$CredentialOption$pubKeyCredParamsEncoder = function (params) {
+	return A2(elm$json$Json$Encode$list, author$project$CredentialOption$pubKeyCredParamEncoder, params);
+};
+var author$project$CredentialOption$relyingPartyEncoder = function (rp) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'name',
+				elm$json$Json$Encode$string(rp.name)),
+				_Utils_Tuple2(
+				'id',
+				elm$json$Json$Encode$string(rp.id))
+			]));
+};
+var author$project$CredentialOption$publicKeyCredentialCreationOptionEncoder = function (option) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'challenge',
+				A2(elm$json$Json$Encode$list, elm$json$Json$Encode$int, option.challenge)),
+				_Utils_Tuple2(
+				'rp',
+				author$project$CredentialOption$relyingPartyEncoder(option.rp)),
+				_Utils_Tuple2(
+				'user',
+				author$project$CredentialOption$encodedUserEncoder(option.user)),
+				_Utils_Tuple2(
+				'pubKeyCredParams',
+				author$project$CredentialOption$pubKeyCredParamsEncoder(option.pubKeyCredParams))
+			]));
 };
 var elm$core$String$isEmpty = function (string) {
 	return string === '';
@@ -6614,13 +6614,13 @@ var author$project$Anonymous$update = F2(
 					return _Utils_Tuple2(
 						model,
 						author$project$Anonymous$createCredential(
-							author$project$Anonymous$publicKeyCredentialCreationOptionEncoder(publicKeyCredentialCreationOption)));
+							author$project$CredentialOption$publicKeyCredentialCreationOptionEncoder(publicKeyCredentialCreationOption)));
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
 			default:
 				var value = msg.a;
-				var _n2 = A2(elm$json$Json$Decode$decodeValue, author$project$Anonymous$assertionDecoder, value);
+				var _n2 = A2(elm$json$Json$Decode$decodeValue, author$project$AttestationResponse$attestationResponseDecoder, value);
 				if (_n2.$ === 'Ok') {
 					var assertion = _n2.a;
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
@@ -6651,7 +6651,7 @@ var author$project$Anonymous$UpdateDisplayName = function (a) {
 var author$project$Anonymous$UpdateUsername = function (a) {
 	return {$: 'UpdateUsername', a: a};
 };
-var author$project$Anonymous$isJust = function (maybeValue) {
+var author$project$Helper$isJust = function (maybeValue) {
 	if (maybeValue.$ === 'Just') {
 		var v = maybeValue.a;
 		return true;
@@ -6772,7 +6772,7 @@ var author$project$Anonymous$view = function (model) {
 		elm$core$Basics$not,
 		A2(
 			elm$core$List$map,
-			author$project$Anonymous$isJust,
+			author$project$Helper$isJust,
 			_List_fromArray(
 				[model.username, model.displayName])));
 	return A2(

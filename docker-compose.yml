@@ -3,18 +3,28 @@ services:
   web:
     build: .
     command: make start
+    env_file:
+      - .env
     volumes:
-      - ./Makefile:/app/Makefile
-      - ./src:/app/src
-      - ./Cargo.toml:/app/Cargo.toml
-      - ./Cargo.lock:/app/Cargo.lock
-      - ./assets:/app/assets
-      - ./cert.pem:/app/cert.pem
-      - ./key.pem:/app/key.pem
-      - ./index.html:/app/index.html
+      - .:/app
     ports:
       - 55301:55301
     depends_on:
       - redis
+      - db
   redis:
     image: redis:alpine
+    volumes:
+      - redis-data:/data
+    restart: always
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: yo
+      POSTGRES_PASSWORD: himitsu
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: always
+volumes:
+  redis-data:
+  db-data:

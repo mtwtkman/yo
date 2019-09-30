@@ -12,10 +12,11 @@ extern crate validator;
 extern crate actix_session;
 extern crate listenfd;
 extern crate actix_redis;
+extern crate serde_cbor;
 
 use actix_session::Session;
 use actix_files::NamedFile;
-use actix_web::{App, HttpServer, middleware, web, HttpResponse};
+use actix_web::{App, HttpServer, middleware, web, HttpResponse, Responder};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use serde::{Serialize, Deserialize};
 use std::path::PathBuf;
@@ -32,6 +33,7 @@ use webauthn::{
     User,
     CredParam,
     Algorithm,
+    RegistrationResponse,
 };
 
 
@@ -55,7 +57,7 @@ fn validate_name(value: &str) -> Result<(), ValidationError>{
     }
 }
 
-fn begin_activate(session: Session, register_form: web::Json<RegistrationForm>) -> actix_web::Result<HttpResponse> {
+fn create_credential(session: Session, register_form: web::Json<RegistrationForm>) -> actix_web::Result<HttpResponse> {
     session.clear();
     match register_form.validate() {
         Ok(()) => {
@@ -83,6 +85,27 @@ fn begin_activate(session: Session, register_form: web::Json<RegistrationForm>) 
     }
 }
 
+
+#[derive(Deserialize)]
+pub struct AttestationResponse {
+    pub id: String,
+    #[serde(rename(deserialize = "rawId"))]
+    pub raw_id: String,
+    pub r#type: String,
+    #[serde(rename(deserialize = "attObj"))]
+    pub att_obj: String,
+    #[serde(rename(deserialize = "clientData"))]
+    pub client_data: String,
+    #[serde(rename(deserialize = "registrationClientExtensions"))]
+    pub registration_client_extensions: String,
+}
+
+fn verify_credential(session: Session, attestation_response: web::Json<AttestationResponse>) -> impl Responder {
+    let challenge = session.get::<String>("challenge").unwrap();
+    let registration_response = RegistrationResponse::new("yo", "localhost", attestation_response.into_inner());
+    HttpResponse::Ok()
+}
+
 fn main() {
     std::env::set_var("RUST_LOG", "actix_web=debug");
     env_logger::init();
@@ -100,9 +123,8 @@ fn main() {
             .wrap(RedisSession::new("redis:6379", &[0; 32]))
             .service(actix_files::Files::new("/assets", "./assets").show_files_listing())
             .route("/", web::get().to(index))
-            .service(
-                web::resource("/begin_activate").route(web::post().to(begin_activate))
-            )
+            .service(web::resource("/create_credential").route(web::post().to(create_credential)))
+            .service(web::resource("/verifiy_credential").route(web::post().to(verify_credential)))
     });
 
     server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {

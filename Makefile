@@ -19,12 +19,6 @@ start:
 
 # docker
 
-init:
-	docker-compose build
-
-up:
-	docker-compose up -d
-
 log-web:
 	docker-compose logs -f --tail 100 web
 
@@ -33,3 +27,9 @@ log:
 
 redis-cli:
 	docker-compose exec redis redis-cli
+
+sh:
+	docker-compose exec web bash
+
+psql:
+	docker-compose exec -u postgres db psql
