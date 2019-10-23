@@ -1,4 +1,3 @@
-extern crate base64;
 extern crate rand;
 extern crate actix_files;
 extern crate actix_web;
@@ -35,7 +34,6 @@ use webauthn::{
     Algorithm,
     RegistrationResponse,
 };
-
 
 fn index() -> actix_web::Result<NamedFile> {
     let path = PathBuf::from("index.html");
@@ -85,7 +83,6 @@ fn create_credential(session: Session, register_form: web::Json<RegistrationForm
     }
 }
 
-
 #[derive(Deserialize)]
 pub struct AttestationResponse {
     pub id: String,
@@ -101,8 +98,9 @@ pub struct AttestationResponse {
 }
 
 fn verify_credential(session: Session, attestation_response: web::Json<AttestationResponse>) -> impl Responder {
-    let challenge = session.get::<String>("challenge").unwrap();
-    let registration_response = RegistrationResponse::new("yo", "localhost", attestation_response.into_inner());
+    let challenge = session.get::<String>("challenge").unwrap().unwrap();
+    let registration_response = RegistrationResponse::new("yo", "localhost:55301", attestation_response.into_inner());
+    let verified = &registration_response.verify(&challenge);
     HttpResponse::Ok()
 }
 
