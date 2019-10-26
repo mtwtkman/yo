@@ -19,10 +19,26 @@ pub enum ClientDataType {
 }
 
 #[derive(Deserialize)]
+enum TokenBindingStatus {
+    #[serde(rename(deserialize = "supported"))]
+    Supported,
+    #[serde(rename(deserialize = "present"))]
+    Present,
+}
+
+#[derive(Deserialize)]
+struct TokenBinding {
+    status: TokenBindingStatus,
+    id: String,
+}
+
+#[derive(Deserialize)]
 pub struct ClientData {
     challenge: String,
     origin: String,
     r#type: ClientDataType,
+    #[serde(rename(deserialize = "tokenBinding"))]
+    token_binding: Option<TokenBinding>
 }
 
 #[derive(Deserialize)]
@@ -86,17 +102,32 @@ impl<'a> RegistrationResponse<'a> {
     }
 
     pub fn verify(&self, challenge: &str) -> Result<(), RegistrationResponseError> {
+        // Spec: https://w3c.github.io/webauthn/#sctn-registering-a-new-credential
+        // 1.  Let options be the PublicKeyCredentialCreationOptions that was passed as the publicKey option in the create() call.
+        // - noop...
+        // 2. Let JSONtext be the result of running UTF-8 decode on the value of response.clientDataJSON.
         let decoded_cd = base64_decode(&self.attestation_response.client_data);
-        let client_data = self.get_client_data(&decoded_cd);
-        if &client_data.r#type != &ClientDataType::Create {
+
+        // 3. Let C, the client data claimed as collected during the credential creation, be the result of running an implementation-specific JSON parser on JSONtext.
+        let c = self.get_client_data(&decoded_cd);
+
+        // 4. Verify that the value of C.type is webauthn.create.
+        if &c.r#type != &ClientDataType::Create {
             return Err(RegistrationResponseError::InvalidClientDataType)
         }
-        if &client_data.challenge != challenge {
+
+        // 5. Verify that the value of C.challenge equals the base64url encoding of options.challenge.
+        if &c.challenge != challenge {
             return Err(RegistrationResponseError::InvalidChallenge)
         }
-        if &client_data.origin != &self.origin {
+
+        // 6. Verify that the value of C.origin matches the Relying Party's origin.
+        if &c.origin != &self.origin {
             return Err(RegistrationResponseError::InvalidOrigin)
         }
+
+        // 7. Verify that the value of C.tokenBinding.status matches the state of Token Binding for the TLS connection over which the assertion was obtained.
+        // If Token Binding was used on that TLS connection, also verify that C.tokenBinding.id matches the base64url encoding of the Token Binding ID for the connection.
         let client_data_hash = self.get_client_data_hash(&decoded_cd);
         let attestation_object = self.get_attestation_object();
         let auth_data_rp_id_hash = &attestation_object.get_auth_data_rp_id_hash();
