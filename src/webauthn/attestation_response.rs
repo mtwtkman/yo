@@ -128,24 +128,48 @@ impl<'a> RegistrationResponse<'a> {
 
         // 7. Verify that the value of C.tokenBinding.status matches the state of Token Binding for the TLS connection over which the assertion was obtained.
         // If Token Binding was used on that TLS connection, also verify that C.tokenBinding.id matches the base64url encoding of the Token Binding ID for the connection.
+        // NOTE: NOT SUPPORTED token binding protocol IN THIS VERSION
         // if let Some(token_binding) = &c.token_binding {
-        //     token_binding.kkkk
+        //     match token_binding.status {
+        //         TokenBindingStatus::Presend => {
+        //             // check token binding id
+        //         },
+        //         TokenBindingStatus::Supported => {
+        //             // noop
+        //         },
+        //     }
         // }
+
+        // 8. Let hash be the result of computing a hash over response.clientDataJSON using SHA-256.
         let client_data_hash = self.get_client_data_hash(&decoded_cd);
+
+        // 9. Perform CBOR decoding on the attestationObject field of the AuthenticatorAttestationResponse structure to obtain the attestation statement format fmt, the authenticator data authData, and the attestation statement attStmt.
         let attestation_object = self.get_attestation_object();
+
+        // 10. Verify that the rpIdHash in authData is the SHA-256 hash of the RP ID expected by the Relying Party.
         let auth_data_rp_id_hash = &attestation_object.get_auth_data_rp_id_hash();
         if &self.rp_id.as_bytes().to_owned() != auth_data_rp_id_hash {
             return Err(RegistrationResponseError::InvalidRpId)
         }
+
+        // 11. Verify that the User Present bit of the flags in authData is set.
         let flag_bit = &attestation_object.get_flag_bit();
         if *flag_bit & 1 << 0 != 0x01 {
             return Err(RegistrationResponseError::InvalidFlag)
         }
+
+        // 12. If user verification is required for this registration, verify that the User Verified bit of the flags in authData is set.
         if self.uv_required && *flag_bit & 1 << 2 != 0x04 {
             return Err(RegistrationResponseError::InvalidFlag)
         }
-        if self.expected_registration_client_extensions.is_some() {
 
+        // 13. Verify that the "alg" parameter in the credential public key in authData matches the alg attribute of one of the items in options.pubKeyCredParams.
+
+        // 14. Verify that the values of the client extension outputs in clientExtensionResults and the authenticator extension outputs in the extensions in authData are as expected,
+        // considering the client extension input values that were given in options.extensions and any specific policy of the Relying Party regarding unsolicited extensions,
+        // i.e., those that were not specified as part of options.extensions.
+        // In the general case, the meaning of "are as expected" is specific to the Relying Party and which extensions are in use.
+        if self.expected_registration_client_extensions.is_some() {
         }
         Ok(())
     }
