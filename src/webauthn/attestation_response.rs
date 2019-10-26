@@ -164,13 +164,13 @@ impl<'a> RegistrationResponse<'a> {
         }
 
         // 13. Verify that the "alg" parameter in the credential public key in authData matches the alg attribute of one of the items in options.pubKeyCredParams.
+        // NOTE: omit implementing
 
         // 14. Verify that the values of the client extension outputs in clientExtensionResults and the authenticator extension outputs in the extensions in authData are as expected,
         // considering the client extension input values that were given in options.extensions and any specific policy of the Relying Party regarding unsolicited extensions,
         // i.e., those that were not specified as part of options.extensions.
         // In the general case, the meaning of "are as expected" is specific to the Relying Party and which extensions are in use.
-        if self.expected_registration_client_extensions.is_some() {
-        }
+        // NOTE: omit implementing
         Ok(())
     }
 
