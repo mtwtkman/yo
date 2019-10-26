@@ -171,6 +171,10 @@ impl<'a> RegistrationResponse<'a> {
         // i.e., those that were not specified as part of options.extensions.
         // In the general case, the meaning of "are as expected" is specific to the Relying Party and which extensions are in use.
         // NOTE: omit implementing
+
+        // 15. Determine the attestation statement format by performing a USASCII case-sensitive match on fmt against the set of supported WebAuthn Attestation Statement Format Identifier values.
+        // An up-to-date list of registered WebAuthn Attestation Statement Format Identifier values is maintained in the IANA registry of the same name [WebAuthn-Registries].
+        // NOTE: omit implementing
         Ok(())
     }
 
