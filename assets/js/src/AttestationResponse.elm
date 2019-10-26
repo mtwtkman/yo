@@ -9,12 +9,8 @@ import Json.Decode.Pipeline exposing (required)
 
 
 type alias AttestationResponse =
-    { id : String
-    , attObj : String
+    {  attObj : String
     , clientData : String
-    , rawId : String
-    , registrationClientExtensions : String
-    , type_ : String
     }
 
 
@@ -25,9 +21,5 @@ type alias AttestationResponse =
 attestationResponseDecoder : Decoder AttestationResponse
 attestationResponseDecoder =
     D.succeed AttestationResponse
-        |> required "id" string
         |> required "attObj" string
         |> required "clientData" string
-        |> required "rawId" string
-        |> required "registrationClientExtensions" string
-        |> required "type" string

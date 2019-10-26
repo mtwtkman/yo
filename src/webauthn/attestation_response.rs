@@ -128,6 +128,9 @@ impl<'a> RegistrationResponse<'a> {
 
         // 7. Verify that the value of C.tokenBinding.status matches the state of Token Binding for the TLS connection over which the assertion was obtained.
         // If Token Binding was used on that TLS connection, also verify that C.tokenBinding.id matches the base64url encoding of the Token Binding ID for the connection.
+        // if let Some(token_binding) = &c.token_binding {
+        //     token_binding.kkkk
+        // }
         let client_data_hash = self.get_client_data_hash(&decoded_cd);
         let attestation_object = self.get_attestation_object();
         let auth_data_rp_id_hash = &attestation_object.get_auth_data_rp_id_hash();

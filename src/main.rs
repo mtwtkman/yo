@@ -85,16 +85,10 @@ fn create_credential(session: Session, register_form: web::Json<RegistrationForm
 
 #[derive(Deserialize)]
 pub struct AttestationResponse {
-    pub id: String,
-    #[serde(rename(deserialize = "rawId"))]
-    pub raw_id: String,
-    pub r#type: String,
     #[serde(rename(deserialize = "attObj"))]
     pub att_obj: String,
     #[serde(rename(deserialize = "clientData"))]
     pub client_data: String,
-    #[serde(rename(deserialize = "registrationClientExtensions"))]
-    pub registration_client_extensions: String,
 }
 
 fn verify_credential(session: Session, attestation_response: web::Json<AttestationResponse>) -> impl Responder {

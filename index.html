@@ -22,15 +22,9 @@
       const credential = await navigator.credentials.create({ publicKey });
       const attObj = new Uint8Array(credential.response.attestationObject);
       const clientDataJSON = new Uint8Array(credential.response.clientDataJSON);
-      const rawId = new Uint8Array(credential.raw_id);
-      const registrationClientExtensions = credential.getClientExtensionResults();
       const attestationResponse = {
-        id: credential.id,
-        rawId: await b64enc(rawId),
-        type: credential.type,
         attObj: await b64enc(attObj),
         clientData: await b64enc(clientDataJSON),
-        registrationClientExtensions: JSON.stringify(registrationClientExtensions),
       };
       console.log(attestationResponse);
       app.ports.receiveAttestationResponse.send(attestationResponse);
