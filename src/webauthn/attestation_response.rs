@@ -51,12 +51,28 @@ pub struct AttestationObject {
 }
 
 impl AttestationObject {
+    const RP_ID_HASH_LENGTH: usize = 32;
+    const FLAGS_LENGTH: usize = 1;
+    const SIGN_COUNT_LENGTH: usize = 4;
+    const AUTHENTICATOR_DATA_LENGTH: usize = Self::RP_ID_HASH_LENGTH + Self::FLAGS_LENGTH + Self::SIGN_COUNT_LENGTH;
+    const AAUID_LENGTH: usize = 16;
+    const CREDENTIAL_ID_LENGTH_LENGTH: usize = 2;
+
     pub fn get_auth_data_rp_id_hash(&self) -> Vec<u8> {
         self.auth_data[0..32].as_bytes().to_owned()
     }
 
     pub fn get_flag_bit(&self) -> u8 {
-        self.auth_data[32..33].as_bytes().to_owned()[0]
+        self.auth_data[Self::RP_ID_HASH_LENGTH..Self::RP_ID_HASH_LENGTH + Self::FLAGS_LENGTH].as_bytes().to_owned()[0]
+    }
+
+    pub fn get_authenticator_data(&self) -> Option<Vec<u8>> {
+        if self.auth_data.len() <= Self::RP_ID_HASH_LENGTH + Self::FLAGS_LENGTH + Self::SIGN_COUNT_LENGTH {
+            None
+        } else {
+            let credential_id_length = self.auth_data[Self::AUTHENTICATOR_DATA_LENGTH..Self::AUTHENTICATOR_DATA_LENGTH + Self::AAUID_LENGTH + Self::CREDENTIAL_ID_LENGTH_LENGTH].as_bytes();
+            Some(vec![])
+        }
     }
 }
 
@@ -164,17 +180,19 @@ impl<'a> RegistrationResponse<'a> {
         }
 
         // 13. Verify that the "alg" parameter in the credential public key in authData matches the alg attribute of one of the items in options.pubKeyCredParams.
-        // NOTE: omit implementing
+        // NOTE: omit implementing(optional)
 
         // 14. Verify that the values of the client extension outputs in clientExtensionResults and the authenticator extension outputs in the extensions in authData are as expected,
         // considering the client extension input values that were given in options.extensions and any specific policy of the Relying Party regarding unsolicited extensions,
         // i.e., those that were not specified as part of options.extensions.
         // In the general case, the meaning of "are as expected" is specific to the Relying Party and which extensions are in use.
-        // NOTE: omit implementing
+        // NOTE: omit implementing(optional)
 
         // 15. Determine the attestation statement format by performing a USASCII case-sensitive match on fmt against the set of supported WebAuthn Attestation Statement Format Identifier values.
         // An up-to-date list of registered WebAuthn Attestation Statement Format Identifier values is maintained in the IANA registry of the same name [WebAuthn-Registries].
-        // NOTE: omit implementing
+        // NOTE: omit implementing(option)
+
+        // 16. Verify that attStmt is a correct attestation statement, conveying a valid attestation signature, by using the attestation statement format fmt’s verification procedure given attStmt, authData and hash.
         Ok(())
     }
 
